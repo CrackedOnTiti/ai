@@ -25,10 +25,15 @@ class CommandBuffer:
     def get_next_command(self):
         """Get next command to send"""
         with self.lock:
+            # New logs
+            print(f"Buffer.get_next_command: Current state: pending_commands={list(self.pending_commands)}, sent_commands={list(self.sent_commands)}")
             if self.pending_commands and self.can_send_command():
                 command = self.pending_commands.popleft()
                 self.sent_commands.append(command)
+                print(f"Buffer.get_next_command: Popped '{command}'. New state: pending_commands={list(self.pending_commands)}, sent_commands={list(self.sent_commands)}") # New log
                 return command
+            # New log
+            print(f"Buffer.get_next_command: No command popped. pending_commands empty? {not self.pending_commands}, can_send_command? {self.can_send_command()}")
             return None
     
     def add_response(self, response):
@@ -49,6 +54,7 @@ class CommandBuffer:
 
 class NetworkClient:
     def __init__(self, config):
+        print("!!! NetworkClient: __init__ called !!!") # New diagnostic
         self.host = config.machine
         self.port = config.port
         self.team_name = config.name
@@ -71,6 +77,7 @@ class NetworkClient:
     
     def connect(self):
         """Connect and perform handshake"""
+        print("!!! NetworkClient: connect() method called !!!") # New diagnostic
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(10.0)  # 10 second timeout
@@ -83,6 +90,7 @@ class NetworkClient:
             self.receive_thread = threading.Thread(target=self._receive_loop, daemon=True)
             self.send_thread = threading.Thread(target=self._send_loop, daemon=True)
             
+            print("!!! NetworkClient: About to start send/receive threads !!!") # New diagnostic
             self.receive_thread.start()
             self.send_thread.start()
             
@@ -190,24 +198,27 @@ class NetworkClient:
     
     def _send_loop(self):
         """Continuous sending loop (runs in separate thread)"""
+        print("Send Loop: Thread started.") # New log
         while self.running and self.connected:
-            # Get next command to send
+            print("Send Loop: Top of loop, checking for command.") # New log
             command = self.buffer.get_next_command()
             
             if command:
+                print(f"Send Loop: Command '{command}' obtained from buffer.") # New log
                 try:
                     message = command + '\n'
                     self.socket.sendall(message.encode('utf-8'))
-                    print(f"Sent: {command}")
+                    print(f"Sent: {command}") # Existing log, crucial for confirmation
                 except socket.error as e:
                     print(f"Send error: {e}")
                     self.connected = False
                     break
             else:
                 # No commands to send, wait a bit
+                # print("Send Loop: No command to send, sleeping.") # Optional: can be noisy
                 time.sleep(0.1)
         
-        print("Send loop ended")
+        print(f"Send loop ended. self.running={self.running}, self.connected={self.connected}") # Modified log
     
     def send_command(self, command):
         """Add command to send queue"""
