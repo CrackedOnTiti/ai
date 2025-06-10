@@ -117,10 +117,17 @@ class NetworkClient:
         print(f"Handshake: Received '{welcome}'")
         
         # Send team name
-        self.send_command(self.team_name)
-        # Note: Actual sending is asynchronous, confirmation comes from _send_loop logs
-        print(f"Handshake: Queued team name for sending: '{self.team_name}'")
-        
+        try:
+            print("Handshake: Attempting to queue team name...") # New log before send_command
+            self.send_command(self.team_name)
+            print(f"Handshake: Successfully queued team name for sending: '{self.team_name}'") # Modified log
+        except Exception as e:
+            print(f"Handshake Error: Exception during send_command for team name: {e}")
+            # Optionally, include traceback:
+            # import traceback
+            # print(traceback.format_exc())
+            return False # Or handle error appropriately
+
         # Wait for client number
         print("Handshake: Waiting for client number...")
         client_num_response = self.buffer.get_response(timeout=5)
