@@ -54,6 +54,7 @@ class CommandBuffer:
 
 class NetworkClient:
     def __init__(self, config):
+        print("!!! NetworkClient: __init__ called !!!") # New diagnostic
         self.host = config.machine
         self.port = config.port
         self.team_name = config.name
@@ -76,6 +77,7 @@ class NetworkClient:
     
     def connect(self):
         """Connect and perform handshake"""
+        print("!!! NetworkClient: connect() method called !!!") # New diagnostic
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(10.0)  # 10 second timeout
@@ -88,6 +90,7 @@ class NetworkClient:
             self.receive_thread = threading.Thread(target=self._receive_loop, daemon=True)
             self.send_thread = threading.Thread(target=self._send_loop, daemon=True)
             
+            print("!!! NetworkClient: About to start send/receive threads !!!") # New diagnostic
             self.receive_thread.start()
             self.send_thread.start()
             
