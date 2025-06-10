@@ -98,42 +98,55 @@ class NetworkClient:
         print("Starting handshake...")
         
         # Wait for WELCOME
+        print("Waiting for WELCOME message...")
         welcome = self.buffer.get_response(timeout=5)
-        if not welcome or welcome != "WELCOME":
-            print(f"Expected WELCOME, got: {welcome}")
+        if not welcome:
+            print("Handshake Error: Did not receive WELCOME (timeout or empty).")
             return False
-        print("Received WELCOME")
+        if welcome != "WELCOME":
+            print(f"Handshake Error: Expected WELCOME, got: '{welcome}'")
+            return False
+        print(f"Handshake: Received '{welcome}'")
         
         # Send team name
         self.send_command(self.team_name)
-        print(f"Sent team name: {self.team_name}")
+        # Note: Actual sending is asynchronous, confirmation comes from _send_loop logs
+        print(f"Handshake: Queued team name for sending: '{self.team_name}'")
         
         # Wait for client number
+        print("Handshake: Waiting for client number...")
         client_num_response = self.buffer.get_response(timeout=5)
         if not client_num_response:
-            print("No client number received")
+            print("Handshake Error: Did not receive client number (timeout or empty).")
             return False
+        print(f"Handshake: Received client number response: '{client_num_response}'")
         
         try:
             self.available_slots = int(client_num_response)
-            print(f"Available slots: {self.available_slots}")
+            print(f"Handshake: Parsed available slots: {self.available_slots}")
         except ValueError:
-            print(f"Invalid client number: {client_num_response}")
+            print(f"Handshake Error: Invalid client number format: '{client_num_response}'")
             return False
         
         # Wait for world dimensions
+        print("Handshake: Waiting for world dimensions...")
         dimensions = self.buffer.get_response(timeout=5)
         if not dimensions:
-            print("No world dimensions received")
+            print("Handshake Error: Did not receive world dimensions (timeout or empty).")
             return False
+        print(f"Handshake: Received world dimensions response: '{dimensions}'")
         
         try:
-            width, height = dimensions.split()
+            # Handle potential multiple spaces in dimensions string if necessary, though protocol implies "X Y"
+            parts = dimensions.split()
+            if len(parts) != 2:
+                raise ValueError("Dimensions string does not contain exactly two parts.")
+            width, height = parts
             self.world_width = int(width)
             self.world_height = int(height)
-            print(f"World dimensions: {self.world_width}x{self.world_height}")
-        except (ValueError, IndexError):
-            print(f"Invalid world dimensions: {dimensions}")
+            print(f"Handshake: Parsed world dimensions: {self.world_width}x{self.world_height}")
+        except ValueError as e:
+            print(f"Handshake Error: Invalid world dimensions format ('{dimensions}'): {e}")
             return False
         
         print("Handshake completed successfully!")
@@ -184,7 +197,7 @@ class NetworkClient:
             if command:
                 try:
                     message = command + '\n'
-                    self.socket.send(message.encode('utf-8'))
+                    self.socket.sendall(message.encode('utf-8'))
                     print(f"Sent: {command}")
                 except socket.error as e:
                     print(f"Send error: {e}")
