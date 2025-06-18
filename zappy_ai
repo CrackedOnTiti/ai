@@ -1,4 +1,0 @@
-#!/bin/bash
-# Zappy AI Launcher
-cd $(dirname $0)
-exec python3 src/ai/main.py "$@"
