@@ -299,6 +299,8 @@ class AIController:
                 if stone_name in current_tile:
                     print(f"💎 Collecting {stone_name} from current tile")
                     self.client.send_command(f"Take {stone_name}")
+                    self.last_vision_data = None
+                    self.need_vision_update = True
                     return
         
         # Priority 5: Move toward visible food (simplified approach)
