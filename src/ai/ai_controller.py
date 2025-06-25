@@ -159,7 +159,8 @@ class BroadcastManager:
         essential_inventory = {
             k: v for k, v in self.player_state.inventory.items() if k != "food"
         }
-        # Use compact separators to remove spaces from JSON string
+        # Use compact separators (',', ':') to remove spaces from the JSON string.
+        # This is critical to ensure the server parses the broadcast text as a single argument.
         inv_str = json.dumps(essential_inventory, separators=(',', ':'))
         message = f"BCAST_INV_SHARE;pid={self.player_id};lvl={self.player_state.level};inv={inv_str}"
         return message
