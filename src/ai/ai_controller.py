@@ -27,7 +27,8 @@ class SimpleSurvivalManager:
     
     def get_mode(self):
         """Simple 2-level system"""
-        return "SAFE" if self.food_count >= 6 else "HUNGRY"
+        # Increased threshold for SAFE mode to provide a better buffer
+        return "SAFE" if self.food_count >= 9 else "HUNGRY"
 
 import time # Required for PlayerState.player_id
 from collections import Counter # Required for PlayerState._recalculate_shared_inventory
