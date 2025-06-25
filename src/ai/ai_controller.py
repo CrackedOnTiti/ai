@@ -402,7 +402,7 @@ class ElevationManager:
                 print(f"✅ Initiator {sender_pid} confirmed ritual start for L{level}. Awaiting server.")
                 self.state = ElevationState.AWAITING_SERVER_RESPONSE
                 self.state_start_time = time.time() # Reset timer for server response
-        
+
         # TODO: Handle players dying or leaving ritual (e.g. no recent INV_SHARE)
 
     def update_and_get_command(self):
@@ -888,11 +888,14 @@ class AdvancedAI:
         other_food = [loc for loc in self.last_vision['food_locations'] if loc != 0]
         if other_food:
             action = self.movement.get_action_for_food(other_food)
-            if action:
-                target = min(other_food)
-                print(f"🎯 {action}→{target} ({mode})")
-                self._send(action)
-                self.last_vision = None
+            if action: # action is a list of commands e.g. ['Forward', 'Left', 'Forward']
+                target = min(other_food) # target is just for the print message
+                print(f"🎯 Planning to move to food at tile {target} via {action} ({mode})")
+                # Send commands one by one.
+                # This is a temporary fix. Ideally, these should go into an action queue.
+                for cmd_step in action:
+                    self._send(cmd_step)
+                self.last_vision = None # Invalidate vision after sending movement commands
                 return
         
         # Priority 8: Collect stones when safe (Targeted and Opportunistic)
