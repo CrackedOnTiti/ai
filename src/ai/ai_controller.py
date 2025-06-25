@@ -658,9 +658,13 @@ class ForkManager:
             return False
             
         # Fork more aggressively at higher levels (need team for win condition)
-        if player_state.level >= 6:
+        if player_state.level >= 6: # Guaranteed fork at L6+ if conditions met
             return True
-        elif player_state.level >= 3 and random.random() < 0.3:  # 30% chance
+        # Allow forking from L2 upwards with a random chance
+        # Adjusting L2-L5 to have a chance, e.g. 20% for L2, 30% for L3-L5
+        elif player_state.level == 2 and random.random() < 0.20: # 20% chance at L2
+            return True
+        elif player_state.level >= 3 and player_state.level < 6 and random.random() < 0.30:  # 30% chance L3-L5
             return True
             
         return False
