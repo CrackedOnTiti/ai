@@ -304,7 +304,7 @@ class ElevationManager:
         self.current_ritual_initiator_pid = None
         self.current_ritual_level = 0
         self.participants = {} # {pid: {"status": "JOINED" / "READY", "direction": X, ...}}
-        
+
         self.state_start_time = time.time()
         self.ritual_timeout = 60  # Max time for a ritual from INIT to start
         self.general_cooldown_duration = 30 # Cooldown after any ritual conclusion
@@ -577,7 +577,7 @@ class ElevationManager:
         # For L1: needs 1 linemate.
         # This is a simplified check. A robust solution would parse counts.
         tile_contents = vision_tile_zero_str.lower().split()
-        
+
         for stone, needed_count in requirements.items():
             if stone == "players" or needed_count == 0:
                 continue
@@ -638,25 +638,7 @@ class ElevationManager:
 
         return None # No level change or already handled
 
-class ForkManager:
-        """Handle server response to elevation"""
-        if "Elevation underway" in response:
-            print("✨ Elevation in progress...")
-            return None
-        elif "Current level:" in response:
-            # Extract new level
-            level_match = re.search(r'Current level: (\d+)', response)
-            if level_match:
-                new_level = int(level_match.group(1))
-                print(f"🎉 ELEVATION SUCCESS! Now level {new_level}")
-                self.attempting_elevation = False
-                return new_level
-        elif response == "ko":
-            print("❌ Elevation failed! (Not enough players or missing stones)")
-            self.attempting_elevation = False
-            self.last_failed_elevation = time.time()
-        
-        return None
+# Orphaned block removed. The correct ForkManager class definition follows.
 
 class ForkManager:
     """Handle team reproduction strategy"""
