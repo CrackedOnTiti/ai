@@ -2,6 +2,7 @@ import time
 import sys
 import random
 import re
+import json # Moved import json to the top
 from network_client import NetworkClient
 
 class SimpleSurvivalManager:
@@ -151,22 +152,15 @@ class BroadcastManager:
         """Check if time to broadcast status"""
         return time.time() - self.last_broadcast > self.broadcast_interval
     
-import json # For serializing inventory in broadcasts
-
     # --- New Broadcast Message Creation Methods ---
 
     def create_inventory_broadcast(self):
         """Creates a broadcast message sharing the player's current inventory and level."""
-        # Ensure player_state has 'food' in inventory for serialization, even if 0
-        # The shared_inventory calculation in PlayerState already handles this.
-        # We only broadcast essential stones for incantations to save space.
         essential_inventory = {
             k: v for k, v in self.player_state.inventory.items() if k != "food"
         }
         inv_str = json.dumps(essential_inventory)
-        # Format: BCAST_INV_SHARE;player_id={id};level={lvl};inv={json_inventory_no_food}
         message = f"BCAST_INV_SHARE;pid={self.player_id};lvl={self.player_state.level};inv={inv_str}"
-        # print(f"DEBUG: Creating inv broadcast: {message}")
         return message
 
     def create_incantation_initiate_broadcast(self):
@@ -181,7 +175,6 @@ import json # For serializing inventory in broadcasts
 
     def create_incantation_ready_broadcast(self, tile_checksum="not_impl"):
         """Broadcasts readiness for incantation at current location."""
-        # tile_checksum could be a hash of items on the tile, or just "ready"
         message = f"BCAST_INC_READY;pid={self.player_id};lvl={self.player_state.level};chksum={tile_checksum}"
         return message
 
@@ -193,13 +186,9 @@ import json # For serializing inventory in broadcasts
     def create_legacy_status_broadcast(self, mode):
         """Maintains a similar format to the old status broadcast for basic info,
            but uses shared inventory for 'NEED' status."""
-        # Now uses shared_inventory to determine if team can elevate this player
         ready_for_elevation_team = "READY_TEAM" if self.player_state.can_elevate(use_shared_inventory=True) else "NEED_TEAM"
         missing_team = self.player_state.get_missing_stones(use_shared_inventory=True)
         missing_team_str = ",".join(missing_team[:3]) if missing_team else "none"
-
-        # Format: L{level}:READY_TEAM/NEED_TEAM:{missing_stones_team}:{mode}
-        # Example: "L2:NEED_TEAM:sibur,phiras:SAFE"
         message = f"L{self.player_state.level}:{ready_for_elevation_team}:{missing_team_str}:{mode}"
         return message
 
